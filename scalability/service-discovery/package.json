@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "consul": "^1.2.0",
+    "http-proxy": "^1.18.1",
+    "portfinder": "^1.0.32"
+  }
+}
