@@ -1,6 +1,6 @@
-const cp = require("child_process");
+const wt = require("worker_threads");
 
-class ProcessPool {
+class ThreadPool {
   constructor(file, poolMax) {
     this.file = file;
     this.poolMax = poolMax;
@@ -8,7 +8,6 @@ class ProcessPool {
     this.active = [];
     this.waiting = [];
   }
-
   acquire() {
     return new Promise((resolve, reject) => {
       let worker;
@@ -22,17 +21,14 @@ class ProcessPool {
         return this.waiting.push({ resolve, reject });
       }
 
-      worker = cp.fork(this.file);
-      worker.once("message", (message) => {
-        if (message === "ready") {
-          this.active.push(worker);
-          return resolve(worker);
-        }
-        worker.kill();
-        reject(new Error("Improper process start"));
+      worker = new wt.Worker(this.file);
+      //different with process
+      worker.once("online", () => {
+        this.active.push(worker);
+        resolve(worker);
       });
       worker.once("exit", (code) => {
-        console.log(`Worker exited with code${code}`);
+        console.log(`Worker exited with code ${code}`);
         this.active = this.active.filter((w) => worker !== w);
         this.pool = this.pool.filter((w) => worker !== w);
       });
@@ -49,4 +45,4 @@ class ProcessPool {
   }
 }
 
-module.exports = ProcessPool;
+module.exports = ThreadPool;
